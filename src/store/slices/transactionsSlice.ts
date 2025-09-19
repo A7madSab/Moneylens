@@ -8,7 +8,7 @@ export interface ITransaction {
   amount: string;
   description: string;
   fileName: string;
-  group: IGroup | null;
+  groupIds: string[];
 }
 interface ITransactionState {
   transactions: ITransaction[];
@@ -30,9 +30,49 @@ export const transactionSlice = createSlice({
       state.error = null;
       state.loading = false;
     },
+    addGroupToTransaction: (
+      state,
+      action: PayloadAction<{ transactionId: string; groupId: string }>
+    ) => {
+      const transaction = state.transactions.find(
+        (t) => t.id === action.payload.transactionId
+      );
+      if (transaction && !transaction.groupIds.includes(action.payload.groupId)) {
+        transaction.groupIds.push(action.payload.groupId);
+      }
+    },
+    removeGroupFromTransaction: (
+      state,
+      action: PayloadAction<{ transactionId: string; groupId: string }>
+    ) => {
+      const transaction = state.transactions.find(
+        (t) => t.id === action.payload.transactionId
+      );
+      if (transaction) {
+        transaction.groupIds = transaction.groupIds.filter(
+          (id) => id !== action.payload.groupId
+        );
+      }
+    },
+    setTransactionGroups: (
+      state,
+      action: PayloadAction<{ transactionId: string; groupIds: string[] }>
+    ) => {
+      const transaction = state.transactions.find(
+        (t) => t.id === action.payload.transactionId
+      );
+      if (transaction) {
+        transaction.groupIds = action.payload.groupIds;
+      }
+    },
   },
 });
 
-export const { addTransactions } = transactionSlice.actions;
+export const {
+  addTransactions,
+  addGroupToTransaction,
+  removeGroupFromTransaction,
+  setTransactionGroups
+} = transactionSlice.actions;
 
 export default transactionSlice.reducer;

@@ -26,8 +26,8 @@ export const parseCSV = async (file: File): Promise<ITransaction[]> => {
         amount: values[2] || "",
         description: values[1] || "",
         fileName: file.name,
-        group: null,
-      } as ITransaction);
+        groupIds: [],
+      });
     }
   }
 

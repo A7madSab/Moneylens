@@ -7,17 +7,115 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Box,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { store, useAppSelector } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
 import {
   MaterialReactTable,
   MRT_ColumnDef,
   useMaterialReactTable,
 } from "material-react-table";
-import { ITransaction } from "@/store/slices/transactionsSlice";
+import {
+  ITransaction,
+  addGroupToTransaction,
+  removeGroupFromTransaction,
+} from "@/store/slices/transactionsSlice";
 
-const groups = store.getState().groups.groups;
+// Helper component to display a group chip
+const GroupChip = ({ groupId }: { groupId: string }) => {
+  const { groups } = useAppSelector((state) => state.groups);
+  const group = groups.find((g) => g.id === groupId);
+
+  if (!group) return <Chip label="Unknown" size="small" color="error" />;
+
+  return (
+    <Chip
+      label={group.name}
+      size="small"
+      sx={{
+        backgroundColor: group.color,
+        color: "white",
+        fontWeight: 500,
+      }}
+    />
+  );
+};
+
+// Actions component for each transaction row
+const TransactionActions = ({ transaction }: { transaction: ITransaction }) => {
+  const dispatch = useAppDispatch();
+  const { groups } = useAppSelector((state) => state.groups);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleToggleGroup = (groupId: string) => {
+    if (transaction.groupIds.includes(groupId)) {
+      dispatch(
+        removeGroupFromTransaction({
+          transactionId: transaction.id,
+          groupId,
+        })
+      );
+    } else {
+      dispatch(
+        addGroupToTransaction({
+          transactionId: transaction.id,
+          groupId,
+        })
+      );
+    }
+    handleClose();
+  };
+
+  return (
+    <>
+      <IconButton size="small" onClick={handleClick}>
+        <MoreVertIcon />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        {groups.map((group) => {
+          const isAssigned = transaction.groupIds.includes(group.id);
+          return (
+            <MenuItem
+              key={group.id}
+              onClick={() => handleToggleGroup(group.id)}
+            >
+              <ListItemIcon>
+                <Chip
+                  size="small"
+                  sx={{
+                    backgroundColor: group.color,
+                    color: "#fff",
+                    opacity: isAssigned ? 1 : 0.3,
+                  }}
+                  label={isAssigned ? "✓" : " "}
+                />
+              </ListItemIcon>
+              <ListItemText>
+                {group.name} {isAssigned ? "(assigned)" : ""}
+              </ListItemText>
+            </MenuItem>
+          );
+        })}
+      </Menu>
+    </>
+  );
+};
 
 const columns: MRT_ColumnDef<ITransaction>[] = [
   {
@@ -41,13 +139,21 @@ const columns: MRT_ColumnDef<ITransaction>[] = [
     size: 150,
   },
   {
-    accessorKey: "group.name",
-    header: "group",
-    size: 150,
+    accessorKey: "groupIds",
+    header: "Groups",
+    size: 200,
     Cell: ({ row }) => {
-      const group = row.original.group;
+      const groupIds = row.original.groupIds || [];
       return (
-        <Chip sx={{ color: group?.color }} label={group?.name || "Ungrouped"} />
+        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+          {groupIds.length === 0 ? (
+            <Chip label="Ungrouped" size="small" variant="outlined" />
+          ) : (
+            groupIds.map((groupId) => (
+              <GroupChip key={groupId} groupId={groupId} />
+            ))
+          )}
+        </Box>
       );
     },
   },
@@ -55,51 +161,8 @@ const columns: MRT_ColumnDef<ITransaction>[] = [
     header: "Actions",
     id: "actions",
     size: 80,
-    Cell: () => {
-      const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-      const open = Boolean(anchorEl);
-
-      const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-      };
-
-      const handleClose = () => {
-        setAnchorEl(null);
-      };
-
-      const handleAssignGroup = (group: (typeof groups)[0]) => {
-        // TODO: Dispatch action to assign group to transaction
-        // Example: dispatch(assignGroup({ transactionId: row.original.id, group }))
-        handleClose();
-      };
-
-      return (
-        <>
-          <IconButton size="small" onClick={handleClick}>
-            <MoreVertIcon />
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleClose}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
-          >
-            {groups.map((group) => (
-              <MenuItem key={group.id} onClick={() => handleAssignGroup(group)}>
-                <ListItemIcon>
-                  <Chip
-                    size="small"
-                    sx={{ backgroundColor: group.color, color: "#fff" }}
-                    label=" "
-                  />
-                </ListItemIcon>
-                <ListItemText>{group.name}</ListItemText>
-              </MenuItem>
-            ))}
-          </Menu>
-        </>
-      );
+    Cell: ({ row }) => {
+      return <TransactionActions transaction={row.original} />;
     },
   },
 ];
