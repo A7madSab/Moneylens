@@ -88,7 +88,7 @@ export const GroupsTab = () => {
                 key={group.id}
                 label={group.name}
                 onDelete={() => handleDeleteGroup(group.id)}
-                deleteIcon={<Close />}
+                deleteIcon={<Close fontSize="small" />}
                 sx={{
                   backgroundColor: group.color,
                   color: "white",
@@ -96,9 +96,9 @@ export const GroupsTab = () => {
                   "& .MuiChip-deleteIcon": {
                     color: "white",
                     "&:hover": {
-                      color: "grey.200"
-                    }
-                  }
+                      color: "grey.200",
+                    },
+                  },
                 }}
               />
             ))}
