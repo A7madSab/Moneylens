@@ -5,6 +5,8 @@ import { UploadFilesTabs } from "@/components/UploadFilesTabs";
 import { TransactionTabs } from "@/components/TransactionTabs";
 import { useAppSelector } from "@/store";
 import { GroupsTab } from "@/components/GroupsTabs";
+import AnalyticsTab from "@/components/AnalyticsTab";
+import RulesTab from "@/components/rules/RulesTab";
 
 export default function CsvTransactionManager() {
   const [tab, setTab] = useState(0);
@@ -12,9 +14,11 @@ export default function CsvTransactionManager() {
   const {
     transactions: { transactions },
     groups: { groups },
-  } = useAppSelector(({ transactions, groups }) => ({
+    activeRules,
+  } = useAppSelector(({ transactions, groups, rules }) => ({
     transactions,
     groups,
+    activeRules: rules.rules.filter((rule) => rule.isActive),
   }));
 
   return (
@@ -43,12 +47,14 @@ export default function CsvTransactionManager() {
           label={`Groups (${groups.length})`}
         />
         <Tab label="Analytics" />
-        <Tab label="Rules (0)" />
+        <Tab label={`Rules (${activeRules.length})`} />
       </Tabs>
 
       {tab === 0 && <UploadFilesTabs />}
       {tab === 1 && <TransactionTabs />}
       {tab === 2 && <GroupsTab />}
+      {tab === 3 && <AnalyticsTab />}
+      {tab === 4 && <RulesTab />}
     </Container>
   );
 }

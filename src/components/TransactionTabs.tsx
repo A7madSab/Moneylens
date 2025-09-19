@@ -9,7 +9,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { store, useAppSelector, useAppStore } from "@/store";
+import { store, useAppSelector } from "@/store";
 import {
   MaterialReactTable,
   MRT_ColumnDef,

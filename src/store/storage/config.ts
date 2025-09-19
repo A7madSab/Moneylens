@@ -10,4 +10,5 @@ export enum SLICE_KEYS {
 export const storageConfig: StorageConfig = {
   [SLICE_KEYS.FILES]: "local",
   [SLICE_KEYS.TRANSACTIONS]: "local",
+  [SLICE_KEYS.RULES]: "local",
 };

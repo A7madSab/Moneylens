@@ -8,6 +8,7 @@ import { SLICE_KEYS } from "./storage/config";
 import groupSlice from "./slices/groupsSlice";
 import filesSlice from "./slices/fileSlice";
 import transactionSlice from "./slices/transactionsSlice";
+import rulesSlice from "./slices/rulesSlice";
 import { logger } from "./middleware/loggerMiddleware";
 
 const persistedState = loadPersistedState();
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
   [SLICE_KEYS.FILES]: filesSlice,
   [SLICE_KEYS.GROUPS]: groupSlice,
   [SLICE_KEYS.TRANSACTIONS]: transactionSlice,
+  [SLICE_KEYS.RULES]: rulesSlice,
 });
 
 export const store = configureStore({
