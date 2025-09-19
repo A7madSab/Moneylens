@@ -4,7 +4,7 @@ import { Container, Tab, Tabs, Typography } from "@mui/material";
 import { UploadFilesTabs } from "@/components/UploadFilesTabs";
 import { TransactionTabs } from "@/components/TransactionTabs";
 import { useAppSelector } from "@/store";
-import { GroupsTab } from "@/components/GroupsTabs";
+import { GroupsTab } from "@/components/groups/GroupsTabs";
 import AnalyticsTab from "@/components/AnalyticsTab";
 import RulesTab from "@/components/rules/RulesTab";
 
