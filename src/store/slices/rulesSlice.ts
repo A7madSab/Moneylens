@@ -1,7 +1,9 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { SLICE_KEYS } from "../storage/config";
 import { generateUUID } from "@/utils";
+import { reapplyAllRules } from "./transactionsSlice";
+import { IAppStore } from "..";
 
 export interface IRule {
   id: string;
@@ -74,9 +76,30 @@ export const rulesSlice = createSlice({
       }
     },
   },
+  selectors: {
+    getActiveRules: (state) => state.rules.filter((rule) => rule.isActive),
+  },
 });
+
+// Async thunk to toggle rule and re-apply all rules
+export const toggleRuleActiveWithReapply = createAsyncThunk(
+  `${SLICE_KEYS.RULES}/toggleRuleActiveWithReapply`,
+  async (ruleId: string, { dispatch, getState }) => {
+    // Toggle the rule
+    dispatch(rulesSlice.actions.toggleRuleActive(ruleId));
+
+    // Get updated state and re-apply all active rules
+    const state = getState() as IAppStore;
+    const activeRules = getActiveRules(state);
+    dispatch(reapplyAllRules(activeRules));
+
+    return ruleId;
+  }
+);
 
 export const { addRule, deleteRule, updateRule, setRules, toggleRuleActive } =
   rulesSlice.actions;
+
+export const { getActiveRules } = rulesSlice.selectors;
 
 export default rulesSlice.reducer;

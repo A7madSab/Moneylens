@@ -1,4 +1,5 @@
 import { ITransaction } from "@/store/slices/transactionsSlice";
+import { IRule } from "@/store/slices/rulesSlice";
 import { v4 as uuidv4 } from "uuid";
 
 export const parseCSV = async (file: File): Promise<ITransaction[]> => {
@@ -32,6 +33,51 @@ export const parseCSV = async (file: File): Promise<ITransaction[]> => {
   }
 
   return records;
+};
+
+export const applyRules = (data: ITransaction[], rules: IRule[]): ITransaction[] => {
+  return data.map((transaction) => {
+    const applicableRules = rules.filter((rule) => {
+      const conditions = rule.contains
+        .toLowerCase()
+        .split(",")
+        .map((c) => c.trim()) // clean up spaces
+        .filter(Boolean); // remove empty strings
+
+      console.log({
+        description: transaction.description,
+        conditions,
+        ruleName: rule.name,
+      });
+
+      return (
+        rule.isActive &&
+        conditions.some((cond) =>
+          transaction.description?.toLowerCase().includes(cond)
+        )
+      );
+    });
+
+    if (applicableRules.length > 0) {
+      const newGroupIds = [...(transaction.groupIds || [])];
+      applicableRules.forEach((rule) => {
+        if (!newGroupIds.includes(rule.groupId)) {
+          newGroupIds.push(rule.groupId);
+        }
+      });
+      return { ...transaction, groupIds: newGroupIds };
+    }
+
+    return transaction;
+  });
+};
+
+export const parseCSVWithRules = async (
+  file: File,
+  rules: IRule[]
+): Promise<ITransaction[]> => {
+  const transactions = await parseCSV(file);
+  return applyRules(transactions, rules);
 };
 
 export const WARM_COLORS = [

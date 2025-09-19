@@ -1,8 +1,9 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 
 import { SLICE_KEYS } from "../storage/config";
-import { parseCSV } from "@/utils";
+import { parseCSVWithRules } from "@/utils";
 import { ITransaction, addTransactions } from "./transactionsSlice";
+import { getActiveRules } from "./rulesSlice";
 
 export interface IFileUploadProgress {
   name: string;
@@ -74,7 +75,7 @@ export const {
 
 export const processFiles = createAsyncThunk(
   `${SLICE_KEYS.FILES}/processFiles`,
-  async (files: File[], { dispatch }): Promise<void> => {
+  async (files: File[], { dispatch, getState }): Promise<void> => {
     const csvFiles = files.filter((file) => file.type === "text/csv");
 
     if (csvFiles.length === 0) {
@@ -83,6 +84,10 @@ export const processFiles = createAsyncThunk(
     }
 
     dispatch(startedUplaodingFiles());
+
+    // Get active rules from the store
+    const state = getState() as any;
+    const activeRules = getActiveRules(state);
 
     const initialProgresses: IFileUploadProgress[] = files.map((file) => ({
       name: file.name,
@@ -95,7 +100,7 @@ export const processFiles = createAsyncThunk(
 
     for (const file of files) {
       try {
-        const data = await Promise.resolve(parseCSV(file));
+        const data = await Promise.resolve(parseCSVWithRules(file, activeRules));
 
         dispatch(
           setFileProgress({

@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { SLICE_KEYS } from "../storage/config";
 import { IGroup } from "./groupsSlice";
+import { applyRules } from "@/utils";
+import type { IRule } from "./rulesSlice";
 
 export interface ITransaction {
   id: string;
@@ -65,6 +67,17 @@ export const transactionSlice = createSlice({
         transaction.groupIds = action.payload.groupIds;
       }
     },
+    reapplyAllRules: (state, action: PayloadAction<IRule[]>) => {
+      // Reset all group assignments and re-apply rules
+      const transactionsWithResetGroups = state.transactions.map(transaction => ({
+        ...transaction,
+        groupIds: []
+      }));
+
+      // Apply all active rules to all transactions
+      const updatedTransactions = applyRules(transactionsWithResetGroups, action.payload);
+      state.transactions = updatedTransactions;
+    },
   },
 });
 
@@ -72,7 +85,8 @@ export const {
   addTransactions,
   addGroupToTransaction,
   removeGroupFromTransaction,
-  setTransactionGroups
+  setTransactionGroups,
+  reapplyAllRules
 } = transactionSlice.actions;
 
 export default transactionSlice.reducer;

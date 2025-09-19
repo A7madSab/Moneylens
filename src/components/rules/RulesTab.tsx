@@ -3,7 +3,7 @@ import { Card, Typography, Box, Chip, IconButton, Switch } from "@mui/material";
 import { Delete } from "@mui/icons-material";
 import { RulesForm } from "./RulesForm";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { deleteRule, toggleRuleActive } from "@/store/slices/rulesSlice";
+import { deleteRule, toggleRuleActiveWithReapply } from "@/store/slices/rulesSlice";
 
 const RulesTab = () => {
   const dispatch = useAppDispatch();
@@ -18,7 +18,7 @@ const RulesTab = () => {
   };
 
   const handleToggleRule = (ruleId: string) => {
-    dispatch(toggleRuleActive(ruleId));
+    dispatch(toggleRuleActiveWithReapply(ruleId));
   };
 
   const getGroupName = (groupId: string) => {

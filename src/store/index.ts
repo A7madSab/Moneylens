@@ -27,10 +27,8 @@ export const store = configureStore({
     getDefaultMiddleware().concat(createPersistenceMiddleware(), logger),
 });
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+export type IAppStore = ReturnType<typeof store.getState>;
 
-// Use throughout your app instead of plain `useDispatch` and `useSelector`
-export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
-export const useAppSelector = useSelector.withTypes<RootState>();
-export const useAppStore = useStore.withTypes<Store<RootState>>();
+export const useAppDispatch = useDispatch.withTypes<typeof store.dispatch>();
+export const useAppSelector = useSelector.withTypes<IAppStore>();
+export const useAppStore = useStore.withTypes<Store<IAppStore>>();
