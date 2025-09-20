@@ -1,13 +1,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { SLICE_KEYS } from "../storage/config";
-import { IGroup } from "./groupsSlice";
 import { applyRules } from "@/utils";
 import type { IRule } from "./rulesSlice";
 
 export interface ITransaction {
   id: string;
   date: string;
-  amount: string;
+  amount: string; // Keep original string for display
+  amountNumeric: number; // Parsed numeric value
+  currency: string; // Extracted currency (e.g., "EGP", "USD")
   description: string;
   fileName: string;
   groupIds: string[];
@@ -39,7 +40,10 @@ export const transactionSlice = createSlice({
       const transaction = state.transactions.find(
         (t) => t.id === action.payload.transactionId
       );
-      if (transaction && !transaction.groupIds.includes(action.payload.groupId)) {
+      if (
+        transaction &&
+        !transaction.groupIds.includes(action.payload.groupId)
+      ) {
         transaction.groupIds.push(action.payload.groupId);
       }
     },
@@ -69,14 +73,25 @@ export const transactionSlice = createSlice({
     },
     reapplyAllRules: (state, action: PayloadAction<IRule[]>) => {
       // Reset all group assignments and re-apply rules
-      const transactionsWithResetGroups = state.transactions.map(transaction => ({
-        ...transaction,
-        groupIds: []
-      }));
+      const transactionsWithResetGroups = state.transactions.map(
+        (transaction) => ({
+          ...transaction,
+          groupIds: [],
+        })
+      );
 
       // Apply all active rules to all transactions
-      const updatedTransactions = applyRules(transactionsWithResetGroups, action.payload);
+      const updatedTransactions = applyRules(
+        transactionsWithResetGroups,
+        action.payload
+      );
       state.transactions = updatedTransactions;
+    },
+    removeTransactionsByFileName: (state, action: PayloadAction<string>) => {
+      // Remove all transactions that match the given fileName
+      state.transactions = state.transactions.filter(
+        (transaction) => transaction.fileName !== action.payload
+      );
     },
   },
 });
@@ -86,7 +101,8 @@ export const {
   addGroupToTransaction,
   removeGroupFromTransaction,
   setTransactionGroups,
-  reapplyAllRules
+  reapplyAllRules,
+  removeTransactionsByFileName,
 } = transactionSlice.actions;
 
 export default transactionSlice.reducer;

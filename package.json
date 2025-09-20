@@ -23,6 +23,7 @@
     "react-dom": "19.1.0",
     "react-dropzone": "^14.3.8",
     "react-redux": "^9.2.0",
+    "recharts": "^3.2.1",
     "redux-logger": "^3.0.6",
     "uuid": "^13.0.0"
   },

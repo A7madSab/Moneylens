@@ -1,13 +1,33 @@
 import React from "react";
-import { Box, Button, Card, CardContent, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  IconButton,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Alert,
+  LinearProgress,
+  Divider
+} from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useDropzone } from "react-dropzone";
-import { processFiles } from "@/store/slices/fileSlice";
+import { processFiles, removeFileAndTransactions } from "@/store/slices/fileSlice";
 
 export const UploadFilesTabs = () => {
   const dispatch = useAppDispatch();
   const files = useAppSelector((state) => state.files);
+  const transactions = useAppSelector((state) => state.transactions.transactions);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (files) => dispatch(processFiles(files)),
@@ -18,114 +38,202 @@ export const UploadFilesTabs = () => {
     multiple: true,
   });
 
+  const handleRemoveFile = (fileName: string) => {
+    dispatch(removeFileAndTransactions(fileName));
+  };
+
+  const getFileStats = (fileName: string) => {
+    const fileTransactions = transactions.filter(t => t.fileName === fileName);
+    return {
+      count: fileTransactions.length,
+      totalAmount: fileTransactions.reduce((sum, t) => sum + Math.abs(t.amountNumeric || 0), 0)
+    };
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          Upload CSV File
-        </Typography>
-        <Typography color="text.secondary" gutterBottom>
-          Upload your transaction CSV file to begin processing and analysis
-        </Typography>
-
-        <Button variant="contained" sx={{ mb: 3 }}>
-          Load Sample Data (August.csv)
-        </Button>
-
-        {/* Drag & Drop Box */}
-        <Box
-          {...getRootProps()}
-          sx={{
-            border: "2px dashed",
-            borderColor: isDragActive ? "primary.main" : "divider",
-            backgroundColor: isDragActive ? "action.hover" : "transparent",
-            borderRadius: 2,
-            py: 6,
-            textAlign: "center",
-            color: "text.secondary",
-            transition: "border-color 0.2s, background-color 0.2s",
-          }}
-        >
-          <input {...getInputProps()} />
-          <CloudUploadIcon
-            sx={{
-              fontSize: 40,
-              mb: 1,
-              color: isDragActive ? "primary.main" : "inherit",
-            }}
-          />
-          <Typography>
-            {isDragActive
-              ? "Drop the files here…"
-              : "Drag & drop your CSV files here"}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            or click to browse files • Multiple files supported
-          </Typography>
-        </Box>
-
-        {files.files.length > 0 && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Upload Progress:
+    <Box>
+      <Card variant="outlined" sx={{ borderRadius: 3, mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <UploadFileIcon sx={{ mr: 1, color: "primary.main" }} />
+            <Typography variant="h5" fontWeight={600}>
+              File Upload
             </Typography>
-            {files.files.map((file) => (
-              <Box key={file.name} sx={{ mb: 2 }}>
-                <Typography variant="body2" sx={{ mb: 0.5 }}>
-                  {file.name}
-                  {file.status === "error" && " - Error"}
-                  {file.status === "completed" && " - Completed"}
-                </Typography>
-                <Box sx={{ width: "100%" }}>
-                  <Box
-                    sx={{
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: "grey.300",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: `${file.progress}%`,
-                        height: "100%",
-                        backgroundColor:
-                          file.status === "error"
-                            ? "error.main"
-                            : file.status === "completed"
-                            ? "success.main"
-                            : "primary.main",
-                        transition: "width 0.3s",
-                      }}
-                    />
-                  </Box>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 0.5, display: "block", textAlign: "right" }}
-                  >
-                    {file.progress}%
-                  </Typography>
-                </Box>
-              </Box>
-            ))}
           </Box>
-        )}
-
-        {/* Expected format */}
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Expected CSV format:
+          <Typography color="text.secondary" gutterBottom>
+            Upload your transaction CSV files to begin processing and analysis
           </Typography>
-          <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
-            <li>
-              Column 1: Transaction Date (e.g., &quot;Wed Jul 02 2025&quot;)
-            </li>
-            <li>Column 2: Description</li>
-            <li>Column 3: Amount (e.g., &quot;--40 EGP&quot;)</li>
-          </ul>
-        </Box>
-      </CardContent>
-    </Card>
+
+          {files.loading && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              <Typography variant="body2">Processing files...</Typography>
+            </Alert>
+          )}
+
+          {files.error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {files.error}
+            </Alert>
+          )}
+
+          {/* Drag & Drop Box */}
+          <Box
+            {...getRootProps()}
+            sx={{
+              border: "2px dashed",
+              borderColor: isDragActive ? "primary.main" : "divider",
+              backgroundColor: isDragActive ? "action.hover" : "transparent",
+              borderRadius: 2,
+              py: 6,
+              textAlign: "center",
+              color: "text.secondary",
+              transition: "border-color 0.2s, background-color 0.2s",
+              cursor: "pointer",
+              "&:hover": {
+                borderColor: "primary.main",
+                backgroundColor: "action.hover",
+              }
+            }}
+          >
+            <input {...getInputProps()} />
+            <CloudUploadIcon
+              sx={{
+                fontSize: 48,
+                mb: 2,
+                color: isDragActive ? "primary.main" : "inherit",
+              }}
+            />
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              {isDragActive
+                ? "Drop the files here…"
+                : "Drag & drop your CSV files here"}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              or click to browse files • Multiple files supported
+            </Typography>
+            <Chip
+              label="CSV files only"
+              size="small"
+              variant="outlined"
+              sx={{ mt: 1 }}
+            />
+          </Box>
+
+          {/* Expected format */}
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Expected CSV format:
+            </Typography>
+            <Box component="ul" sx={{ m: 0, pl: 2, color: "text.secondary" }}>
+              <Typography component="li" variant="body2">
+                Column 1: Transaction Date (e.g., "Wed Jul 02 2025")
+              </Typography>
+              <Typography component="li" variant="body2">
+                Column 2: Description
+              </Typography>
+              <Typography component="li" variant="body2">
+                Column 3: Amount (e.g., "-40 EGP", "100 USD")
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* File Management Section */}
+      {files.files.length > 0 && (
+        <Card variant="outlined" sx={{ borderRadius: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+              Uploaded Files ({files.files.length})
+            </Typography>
+
+            <List>
+              {files.files.map((file, index) => {
+                const stats = getFileStats(file.name);
+                return (
+                  <React.Fragment key={file.name}>
+                    <ListItem sx={{ px: 0 }}>
+                      <Box sx={{ mr: 2 }}>
+                        {file.status === "completed" && (
+                          <CheckCircleIcon sx={{ color: "success.main" }} />
+                        )}
+                        {file.status === "error" && (
+                          <ErrorIcon sx={{ color: "error.main" }} />
+                        )}
+                        {file.status === "uploading" && (
+                          <CloudUploadIcon sx={{ color: "primary.main" }} />
+                        )}
+                      </Box>
+
+                      <ListItemText
+                        primary={
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Typography variant="body1" fontWeight={500}>
+                              {file.name}
+                            </Typography>
+                            <Chip
+                              label={file.status}
+                              size="small"
+                              color={
+                                file.status === "completed"
+                                  ? "success"
+                                  : file.status === "error"
+                                  ? "error"
+                                  : "primary"
+                              }
+                              variant="outlined"
+                            />
+                          </Box>
+                        }
+                        secondary={
+                          <Box>
+                            {file.status === "uploading" && (
+                              <LinearProgress
+                                variant="determinate"
+                                value={file.progress}
+                                sx={{ mt: 1, mb: 1 }}
+                              />
+                            )}
+                            {file.status === "completed" && stats.count > 0 && (
+                              <Typography variant="body2" color="text.secondary">
+                                {stats.count} transactions • Total: {formatCurrency(stats.totalAmount)}
+                              </Typography>
+                            )}
+                            {file.status === "error" && (
+                              <Typography variant="body2" color="error">
+                                Failed to process file
+                              </Typography>
+                            )}
+                          </Box>
+                        }
+                      />
+
+                      <ListItemSecondaryAction>
+                        <IconButton
+                          edge="end"
+                          onClick={() => handleRemoveFile(file.name)}
+                          color="error"
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                    {index < files.files.length - 1 && <Divider />}
+                  </React.Fragment>
+                );
+              })}
+            </List>
+          </CardContent>
+        </Card>
+      )}
+    </Box>
   );
 };

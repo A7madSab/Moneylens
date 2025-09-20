@@ -1,6 +1,78 @@
 import { ITransaction } from "@/store/slices/transactionsSlice";
 import { IRule } from "@/store/slices/rulesSlice";
 import { v4 as uuidv4 } from "uuid";
+import { IGroup } from "@/store/slices/groupsSlice";
+
+export const parseAndFormatDate = (rawDate: string): string => {
+  if (!rawDate) return "";
+
+  try {
+    // Try to parse the date string (handles formats like "Tue Jul 22 2025")
+    const parsedDate = new Date(rawDate);
+
+    // Check if the date is valid
+    if (!isNaN(parsedDate.getTime())) {
+      // Format as YYYY-MM-DD for consistent filtering
+      return parsedDate.toISOString().split("T")[0];
+    }
+  } catch (error) {
+    // If parsing fails, keep the original string
+    console.warn(`Failed to parse date "${rawDate}":`, error);
+  }
+
+  // Return original string if parsing fails
+  return rawDate;
+};
+
+export const parseAmountWithCurrency = (
+  rawAmount: string
+): {
+  amountNumeric: number;
+  currency: string;
+  originalAmount: string;
+} => {
+  if (!rawAmount) {
+    return {
+      amountNumeric: 0,
+      currency: "",
+      originalAmount: rawAmount,
+    };
+  }
+
+  const trimmedAmount = rawAmount.trim();
+
+  try {
+    // Common currency codes and symbols
+    const currencyPattern = /([A-Z]{3}|\$|€|£|¥|₹|₽|¢)/i;
+
+    // Extract currency
+    const currencyMatch = trimmedAmount.match(currencyPattern);
+    const currency = currencyMatch ? currencyMatch[1].toUpperCase() : "";
+
+    // Remove currency and extract numeric value
+    // This handles cases like "-433.2 EGP", "USD 100.50", "$-25.75", etc.
+    const numericString = trimmedAmount
+      .replace(currencyPattern, "") // Remove currency
+      .replace(/[^\d.-]/g, "") // Keep only digits, dots, and minus signs
+      .trim();
+
+    // Parse the numeric value
+    const amountNumeric = parseFloat(numericString);
+
+    return {
+      amountNumeric: isNaN(amountNumeric) ? 0 : amountNumeric,
+      currency: currency || "USD", // Default to USD if no currency found
+      originalAmount: trimmedAmount,
+    };
+  } catch (error) {
+    console.warn(`Failed to parse amount "${rawAmount}":`, error);
+    return {
+      amountNumeric: 0,
+      currency: "USD",
+      originalAmount: trimmedAmount,
+    };
+  }
+};
 
 export const parseCSV = async (file: File): Promise<ITransaction[]> => {
   const csvText = await file.text();
@@ -21,10 +93,14 @@ export const parseCSV = async (file: File): Promise<ITransaction[]> => {
     if (values[2].toLowerCase().includes("amount")) continue;
 
     if (values.length >= 2) {
+      const parsedAmount = parseAmountWithCurrency(values[2] || "");
+
       records.push({
         id: `${file.name}-${i}`,
-        date: values[0] || "",
-        amount: values[2] || "",
+        date: parseAndFormatDate(values[0] || ""),
+        amount: parsedAmount.originalAmount,
+        amountNumeric: parsedAmount.amountNumeric,
+        currency: parsedAmount.currency,
         description: values[1] || "",
         fileName: file.name,
         groupIds: [],
@@ -35,7 +111,10 @@ export const parseCSV = async (file: File): Promise<ITransaction[]> => {
   return records;
 };
 
-export const applyRules = (data: ITransaction[], rules: IRule[]): ITransaction[] => {
+export const applyRules = (
+  data: ITransaction[],
+  rules: IRule[]
+): ITransaction[] => {
   return data.map((transaction) => {
     const applicableRules = rules.filter((rule) => {
       const conditions = rule.contains
@@ -114,4 +193,86 @@ export const getRandomWarmColor = (): string => {
 
 export const generateUUID = (): string => {
   return uuidv4();
+};
+
+// Analytics utility functions
+export const calculateTotalSpending = (
+  transactions: ITransaction[]
+): number => {
+  return transactions.reduce((total, transaction) => {
+    return total + Math.abs(transaction.amountNumeric || 0);
+  }, 0);
+};
+
+export const calculateSpendingByGroup = (
+  transactions: ITransaction[],
+  groups: IGroup[]
+): Array<{
+  groupName: string;
+  amount: number;
+  color: string;
+  count: number;
+}> => {
+  const groupMap = new Map<string, { amount: number; count: number }>();
+
+  transactions.forEach((transaction) => {
+    const absAmount = Math.abs(transaction.amountNumeric || 0);
+
+    if (transaction.groupIds.length === 0) {
+      // Ungrouped transactions
+      const current = groupMap.get("ungrouped") || { amount: 0, count: 0 };
+      groupMap.set("ungrouped", {
+        amount: current.amount + absAmount,
+        count: current.count + 1,
+      });
+    } else {
+      // Distribute amount across groups if multiple groups
+      const amountPerGroup = absAmount / transaction.groupIds.length;
+      transaction.groupIds.forEach((groupId) => {
+        const current = groupMap.get(groupId) || { amount: 0, count: 0 };
+        groupMap.set(groupId, {
+          amount: current.amount + amountPerGroup,
+          count: current.count + 1,
+        });
+      });
+    }
+  });
+
+  return Array.from(groupMap.entries())
+    .map(([groupId, data]) => {
+      if (groupId === "ungrouped") {
+        return {
+          groupName: "Ungrouped",
+          amount: data.amount,
+          color: "#9CA3AF",
+          count: data.count,
+        };
+      }
+
+      const group = groups.find((g) => g.id === groupId);
+      return {
+        groupName: group?.name || "Unknown",
+        amount: data.amount,
+        color: group?.color || "#9CA3AF",
+        count: data.count,
+      };
+    })
+    .sort((a, b) => b.amount - a.amount);
+};
+
+export const getTopCategories = (
+  spendingByGroup: Array<{
+    groupName: string;
+    amount: number;
+    color: string;
+    count: number;
+  }>,
+  limit: number = 5
+): Array<{
+  groupName: string;
+  amount: number;
+  color: string;
+  count: number;
+}> => {
+  return spendingByGroup.slice(0, limit);
 };

@@ -27,11 +27,6 @@ const initialState: { groups: IGroup[] } = {
       color: "#FF8E53",
     },
     {
-      id: "4",
-      name: "Shopping",
-      color: "#6BCF7F",
-    },
-    {
       id: "5",
       name: "Entertainment",
       color: "#A29BFE",
@@ -48,18 +43,8 @@ const initialState: { groups: IGroup[] } = {
     },
     {
       id: "8",
-      name: "Insurance",
-      color: "#E17055",
-    },
-    {
-      id: "9",
-      name: "Education",
-      color: "#96CEB4",
-    },
-    {
-      id: "10",
-      name: "Savings",
-      color: "#FDCB6E",
+      name: "Cloth",
+      color: "#FFD93D",
     },
   ],
 };

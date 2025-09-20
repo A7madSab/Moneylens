@@ -3,27 +3,18 @@ import React, { useState } from "react";
 import { Container, Tab, Tabs, Typography } from "@mui/material";
 import { UploadFilesTabs } from "@/components/UploadFilesTabs";
 import { TransactionTabs } from "@/components/TransactionTabs";
+import { AnalyticsTab } from "@/components/analytics/AnalyticsTab";
 import { useAppSelector } from "@/store";
-import { GroupsTab } from "@/components/groups/GroupsTabs";
-import AnalyticsTab from "@/components/AnalyticsTab";
-import RulesTab from "@/components/rules/RulesTab";
 
 export default function CsvTransactionManager() {
   const [tab, setTab] = useState(0);
 
-  const {
-    transactions: { transactions },
-    groups: { groups },
-    activeRules,
-  } = useAppSelector(({ transactions, groups, rules }) => ({
-    transactions,
-    groups,
-    activeRules: rules.rules.filter((rule) => rule.isActive),
+  const { transactions } = useAppSelector((state) => ({
+    transactions: state.transactions.transactions,
   }));
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Title */}
       <Typography variant="h4" fontWeight="bold" gutterBottom>
         CSV Transaction Manager
       </Typography>
@@ -31,30 +22,23 @@ export default function CsvTransactionManager() {
         Upload, queue, and analyze your financial transaction data
       </Typography>
 
-      {/* Tabs */}
       <Tabs
         value={tab}
         onChange={(_, newValue) => setTab(newValue)}
         sx={{ mb: 3 }}
       >
-        <Tab label="Upload" />
+        <Tab value={0} label="Upload" />
         <Tab
+          value={1}
           disabled={transactions.length === 0}
           label={`Transactions (${transactions.length})`}
         />
-        <Tab
-          disabled={groups.length === 0}
-          label={`Groups (${groups.length})`}
-        />
-        <Tab label="Analytics" />
-        <Tab label={`Rules (${activeRules.length})`} />
+        <Tab value={3} label="Analytics" />
       </Tabs>
 
       {tab === 0 && <UploadFilesTabs />}
       {tab === 1 && <TransactionTabs />}
-      {tab === 2 && <GroupsTab />}
       {tab === 3 && <AnalyticsTab />}
-      {tab === 4 && <RulesTab />}
     </Container>
   );
 }

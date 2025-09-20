@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  Card,
-  Typography,
-  Box,
-  Chip,
-  IconButton,
-  TextField,
-} from "@mui/material";
+import { Card, Typography, Box, Chip, TextField } from "@mui/material";
 import { Close, Search } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { deleteGroup } from "@/store/slices/groupsSlice";
@@ -36,16 +29,7 @@ export const GroupsTab = () => {
         Organize your transactions by creating and managing groups
       </Typography>
 
-      <Card variant="outlined" sx={{ p: 3, mb: 3, bgcolor: "grey.50" }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>
-          Create New Group
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Create groups to categorize your financial transactions
-        </Typography>
-
-        <GroupsForm />
-      </Card>
+      <GroupsForm />
 
       <Box>
         <Box

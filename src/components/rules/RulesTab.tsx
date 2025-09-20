@@ -3,7 +3,10 @@ import { Card, Typography, Box, Chip, IconButton, Switch } from "@mui/material";
 import { Delete } from "@mui/icons-material";
 import { RulesForm } from "./RulesForm";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { deleteRule, toggleRuleActiveWithReapply } from "@/store/slices/rulesSlice";
+import {
+  deleteRule,
+  toggleRuleActiveWithReapply,
+} from "@/store/slices/rulesSlice";
 
 const RulesTab = () => {
   const dispatch = useAppDispatch();
@@ -41,17 +44,7 @@ const RulesTab = () => {
         description content
       </Typography>
 
-      <Card variant="outlined" sx={{ p: 3, mb: 3, bgcolor: "grey.50" }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>
-          Create New Rule
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Rules automatically assign transactions to groups when their
-          description contains specific text
-        </Typography>
-
-        <RulesForm />
-      </Card>
+      <RulesForm />
 
       <Box>
         <Typography variant="h6" sx={{ mb: 1 }}>

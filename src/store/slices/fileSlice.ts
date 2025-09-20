@@ -2,7 +2,11 @@ import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 
 import { SLICE_KEYS } from "../storage/config";
 import { parseCSVWithRules } from "@/utils";
-import { ITransaction, addTransactions } from "./transactionsSlice";
+import {
+  ITransaction,
+  addTransactions,
+  removeTransactionsByFileName,
+} from "./transactionsSlice";
 import { getActiveRules } from "./rulesSlice";
 
 export interface IFileUploadProgress {
@@ -63,6 +67,10 @@ export const filesSlice = createSlice({
     setFileProgresses(state, action: PayloadAction<IFileUploadProgress[]>) {
       state.files = action.payload;
     },
+    removeFile: (state, action: PayloadAction<string>) => {
+      // Remove the file from the files array
+      state.files = state.files.filter((file) => file.name !== action.payload);
+    },
   },
 });
 
@@ -71,6 +79,7 @@ export const {
   errorUplaodingFiles,
   setFileProgresses,
   setFileProgress,
+  removeFile,
 } = filesSlice.actions;
 
 export const processFiles = createAsyncThunk(
@@ -100,7 +109,9 @@ export const processFiles = createAsyncThunk(
 
     for (const file of files) {
       try {
-        const data = await Promise.resolve(parseCSVWithRules(file, activeRules));
+        const data = await Promise.resolve(
+          parseCSVWithRules(file, activeRules)
+        );
 
         dispatch(
           setFileProgress({
@@ -125,6 +136,17 @@ export const processFiles = createAsyncThunk(
     }
 
     dispatch(addTransactions(allData));
+  }
+);
+
+export const removeFileAndTransactions = createAsyncThunk(
+  `${SLICE_KEYS.FILES}/removeFileAndTransactions`,
+  async (fileName: string, { dispatch }): Promise<void> => {
+    // Remove the file from the files list
+    dispatch(removeFile(fileName));
+
+    // Remove all transactions associated with this file
+    dispatch(removeTransactionsByFileName(fileName));
   }
 );
 
