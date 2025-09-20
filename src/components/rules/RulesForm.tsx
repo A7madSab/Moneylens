@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Box,
@@ -6,35 +6,71 @@ import {
   Button,
   Select,
   MenuItem,
-  FormControl,
-  FormHelperText,
   Card,
+  Grid,
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { useForm } from "@tanstack/react-form";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { addRuleWithReapply } from "@/store/slices/rulesSlice";
+import {
+  addRuleWithReapply,
+  updateRuleWithReapply,
+  IRule,
+} from "@/store/slices/rulesSlice";
 
-export const RulesForm = () => {
+interface RulesFormProps {
+  editingRule?: IRule | null;
+  onCancelEdit?: () => void;
+}
+
+export const RulesForm = ({ editingRule, onCancelEdit }: RulesFormProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const dispatch = useAppDispatch();
   const { groups } = useAppSelector((state) => state.groups);
 
+  const isEditing = !!editingRule;
+
   const form = useForm({
     defaultValues: {
-      name: "",
-      contains: "",
-      groupId: "",
+      name: editingRule?.name || "",
+      contains: editingRule?.contains || "",
+      groupId: editingRule?.groupId || "",
     },
     onSubmit: async ({ value }) => {
-      dispatch(addRuleWithReapply(value));
-
-      form.reset();
-      setShowCreateForm(false);
+      if (isEditing && editingRule) {
+        // Update existing rule
+        dispatch(
+          updateRuleWithReapply({
+            ...editingRule,
+            ...value,
+          })
+        );
+        onCancelEdit?.();
+      } else {
+        // Create new rule
+        dispatch(addRuleWithReapply(value));
+        form.reset();
+        setShowCreateForm(false);
+      }
     },
   });
 
+  // Reset form when editing rule changes
+  useEffect(() => {
+    if (editingRule) {
+      form.reset();
+      form.setFieldValue("name", editingRule.name);
+      form.setFieldValue("contains", editingRule.contains);
+      form.setFieldValue("groupId", editingRule.groupId);
+      setShowCreateForm(true); // Show form when editing
+    }
+  }, [editingRule, form]);
+
   const handleCancel = () => {
+    if (isEditing) {
+      onCancelEdit?.();
+    }
+
     form.reset();
     setShowCreateForm(false);
   };
@@ -44,9 +80,14 @@ export const RulesForm = () => {
   };
 
   const renderForm = () => {
-    if (!showCreateForm)
+    if (!showCreateForm && !isEditing)
       return (
-        <Button variant="contained" startIcon={<Add />} onClick={handleAddRule}>
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<Add />}
+          onClick={handleAddRule}
+        >
           Add Rule
         </Button>
       );
@@ -59,81 +100,55 @@ export const RulesForm = () => {
           form.handleSubmit();
         }}
       >
-        <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-          <form.Field
-            name="name"
-            validators={{
-              onChange: ({ value }) =>
-                !value || value.trim().length === 0
-                  ? "Rule name is required"
-                  : undefined,
-            }}
-          >
-            {(field) => (
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
-                  Rule Name
-                </Typography>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="e.g., Food Purchases"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  error={!!field.state.meta.errors.length}
-                  helperText={field.state.meta.errors.join(", ")}
-                />
-              </Box>
-            )}
-          </form.Field>
+        <Grid container spacing={2} pb={2}>
+          <Grid container size={{ xs: 6 }}>
+            <form.Field
+              name="name"
+              validators={{
+                onChange: ({ value }) =>
+                  !value || value.trim().length === 0
+                    ? "Rule name is required"
+                    : undefined,
+              }}
+            >
+              {(field) => (
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                    Rule Name
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="e.g., Food Purchases"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    error={!!field.state.meta.errors.length}
+                    helperText={field.state.meta.errors.join(", ")}
+                  />
+                </Box>
+              )}
+            </form.Field>
+          </Grid>
 
-          <form.Field
-            name="contains"
-            validators={{
-              onChange: ({ value }) =>
-                !value || value.trim().length === 0
-                  ? "Description keywords are required"
-                  : undefined,
-            }}
-          >
-            {(field) => (
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
-                  Description Contains
-                </Typography>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="e.g., restaurant, food, cafe"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  error={!!field.state.meta.errors.length}
-                  helperText={field.state.meta.errors.join(", ")}
-                />
-              </Box>
-            )}
-          </form.Field>
-
-          <form.Field
-            name="groupId"
-            validators={{
-              onChange: ({ value }) =>
-                !value || value.trim().length === 0
-                  ? "Please select a group"
-                  : undefined,
-            }}
-          >
-            {(field) => (
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
-                  Assign to Group
-                </Typography>
-                <FormControl
-                  fullWidth
-                  size="small"
-                  error={!!field.state.meta.errors.length}
-                >
+          <Grid container size={{ xs: 6 }}>
+            <form.Field
+              name="groupId"
+              validators={{
+                onChange: ({ value }) =>
+                  !value || value.trim().length === 0
+                    ? "Please select a group"
+                    : undefined,
+              }}
+            >
+              {(field) => (
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                    Assign to Group
+                  </Typography>
                   <Select
+                    fullWidth
+                    sx={{ backgroundColor: "white" }}
+                    size="small"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     displayEmpty
@@ -147,16 +162,42 @@ export const RulesForm = () => {
                       </MenuItem>
                     ))}
                   </Select>
-                  {field.state.meta.errors.length > 0 && (
-                    <FormHelperText>
-                      {field.state.meta.errors.join(", ")}
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </Box>
-            )}
-          </form.Field>
-        </Box>
+                </Box>
+              )}
+            </form.Field>
+          </Grid>
+
+          <Grid container size={{ xs: 12 }}>
+            <form.Field
+              name="contains"
+              validators={{
+                onChange: ({ value }) =>
+                  !value || value.trim().length === 0
+                    ? "Rule name is required"
+                    : undefined,
+              }}
+            >
+              {(field) => (
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                    Contains
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    size="small"
+                    placeholder="e.g., Food Purchases"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    error={!!field.state.meta.errors.length}
+                    helperText={field.state.meta.errors.join(", ")}
+                  />
+                </Box>
+              )}
+            </form.Field>
+          </Grid>
+        </Grid>
 
         <Box sx={{ display: "flex", gap: 1 }}>
           <form.Subscribe
@@ -164,16 +205,23 @@ export const RulesForm = () => {
           >
             {([canSubmit, isSubmitting]) => (
               <Button
+                size="small"
                 type="submit"
                 variant="contained"
                 disabled={!canSubmit}
                 sx={{ opacity: isSubmitting ? 0.7 : 1 }}
               >
-                {isSubmitting ? "Creating..." : "Create Rule"}
+                {isSubmitting
+                  ? isEditing
+                    ? "Updating..."
+                    : "Creating..."
+                  : isEditing
+                  ? "Update Rule"
+                  : "Create Rule"}
               </Button>
             )}
           </form.Subscribe>
-          <Button variant="text" onClick={handleCancel}>
+          <Button size="small" variant="text" onClick={handleCancel}>
             Cancel
           </Button>
         </Box>
@@ -184,7 +232,7 @@ export const RulesForm = () => {
   return (
     <Card variant="outlined" sx={{ p: 3, mb: 3, bgcolor: "grey.50" }}>
       <Typography variant="h6" sx={{ mb: 1 }}>
-        Create New Rule
+        {isEditing ? "Edit Rule" : "Create New Rule"}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Rules automatically assign transactions to groups when their description

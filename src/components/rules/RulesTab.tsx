@@ -1,15 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, Typography, Box, Chip, IconButton, Switch } from "@mui/material";
-import { Delete } from "@mui/icons-material";
+import { Delete, Edit } from "@mui/icons-material";
 import { RulesForm } from "./RulesForm";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   deleteRule,
   toggleRuleActiveWithReapply,
+  IRule,
 } from "@/store/slices/rulesSlice";
 
 const RulesTab = () => {
   const dispatch = useAppDispatch();
+  const [editingRule, setEditingRule] = useState<IRule | null>(null);
+
   const { rules, activeRules } = useAppSelector((state) => ({
     rules: state.rules.rules,
     activeRules: state.rules.rules.filter((rule) => rule.isActive),
@@ -22,6 +25,14 @@ const RulesTab = () => {
 
   const handleToggleRule = (ruleId: string) => {
     dispatch(toggleRuleActiveWithReapply(ruleId));
+  };
+
+  const handleEditRule = (rule: IRule) => {
+    setEditingRule(rule);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRule(null);
   };
 
   const getGroupName = (groupId: string) => {
@@ -44,7 +55,10 @@ const RulesTab = () => {
         description content
       </Typography>
 
-      <RulesForm />
+      <RulesForm
+        editingRule={editingRule}
+        onCancelEdit={handleCancelEdit}
+      />
 
       <Box>
         <Typography variant="h6" sx={{ mb: 1 }}>
@@ -126,6 +140,13 @@ const RulesTab = () => {
                     onChange={() => handleToggleRule(rule.id)}
                     size="small"
                   />
+                  <IconButton
+                    onClick={() => handleEditRule(rule)}
+                    color="primary"
+                    size="small"
+                  >
+                    <Edit />
+                  </IconButton>
                   <IconButton
                     onClick={() => handleDeleteRule(rule.id)}
                     color="error"

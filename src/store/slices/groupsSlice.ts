@@ -3,7 +3,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { SLICE_KEYS } from "../storage/config";
 import { generateUUID, getRandomWarmColor } from "@/utils";
 import { IAppStore } from "..";
-import { removeGroupFromAllTransactions, reapplyAllRules } from "./transactionsSlice";
+import {
+  removeGroupFromAllTransactions,
+  reapplyAllRules,
+} from "./transactionsSlice";
 import { deleteRulesByGroupId, getActiveRules } from "./rulesSlice";
 
 export interface IGroup {
@@ -48,6 +51,21 @@ const initialState: { groups: IGroup[] } = {
       id: "8",
       name: "Cloth",
       color: "#FFD93D",
+    },
+    {
+      id: "fda79c30-e7e1-4d0a-a6c0-e13c5c4eb62c",
+      name: "E-Subscriptions",
+      color: "#FF7675",
+    },
+    {
+      id: "37185064-492f-46f3-813d-1f0cbcb995ec",
+      name: "Utility",
+      color: "#E84393",
+    },
+    {
+      id: "89e0b546-9e56-4c7a-b34b-6d68b6f0ecbb",
+      name: "Bank Fee",
+      color: "#FD79A8",
     },
   ],
 };

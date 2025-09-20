@@ -92,9 +92,9 @@ export const parseCSV = async (file: File): Promise<ITransaction[]> => {
 
     if (values[2].toLowerCase().includes("amount")) continue;
 
-    if (values.length >= 2) {
-      const parsedAmount = parseAmountWithCurrency(values[2] || "");
+    const parsedAmount = parseAmountWithCurrency(values[2] || "");
 
+    if (values.length >= 2 && parsedAmount.amountNumeric < 0) {
       records.push({
         id: `${file.name}-${i}`,
         date: parseAndFormatDate(values[0] || ""),
