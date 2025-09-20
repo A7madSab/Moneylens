@@ -93,6 +93,14 @@ export const transactionSlice = createSlice({
         (transaction) => transaction.fileName !== action.payload
       );
     },
+    removeGroupFromAllTransactions: (state, action: PayloadAction<string>) => {
+      // Remove the specified groupId from all transactions
+      state.transactions.forEach(transaction => {
+        transaction.groupIds = transaction.groupIds.filter(
+          groupId => groupId !== action.payload
+        );
+      });
+    },
   },
 });
 
@@ -103,6 +111,7 @@ export const {
   setTransactionGroups,
   reapplyAllRules,
   removeTransactionsByFileName,
+  removeGroupFromAllTransactions,
 } = transactionSlice.actions;
 
 export default transactionSlice.reducer;

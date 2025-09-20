@@ -1,7 +1,10 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { SLICE_KEYS } from "../storage/config";
 import { generateUUID, getRandomWarmColor } from "@/utils";
+import { IAppStore } from "..";
+import { removeGroupFromAllTransactions, reapplyAllRules } from "./transactionsSlice";
+import { deleteRulesByGroupId, getActiveRules } from "./rulesSlice";
 
 export interface IGroup {
   id: string;
@@ -78,6 +81,28 @@ export const groupSlice = createSlice({
     },
   },
 });
+
+// Async thunk to delete group and clean up all related data
+export const deleteGroupWithCleanup = createAsyncThunk(
+  `${SLICE_KEYS.GROUPS}/deleteGroupWithCleanup`,
+  async (groupId: string, { dispatch, getState }) => {
+    // 1. Remove the group from all transactions
+    dispatch(removeGroupFromAllTransactions(groupId));
+
+    // 2. Delete all rules associated with this group
+    dispatch(deleteRulesByGroupId(groupId));
+
+    // 3. Delete the group itself
+    dispatch(groupSlice.actions.deleteGroup(groupId));
+
+    // 4. Re-apply all remaining active rules to ensure data consistency
+    const state = getState() as IAppStore;
+    const activeRules = getActiveRules(state);
+    dispatch(reapplyAllRules(activeRules));
+
+    return groupId;
+  }
+);
 
 export const { addGroup, deleteGroup, setGroups, updateGroup } =
   groupSlice.actions;

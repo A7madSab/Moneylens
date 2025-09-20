@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, Typography, Box, Chip, TextField } from "@mui/material";
 import { Close, Search } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { deleteGroup } from "@/store/slices/groupsSlice";
+import { deleteGroupWithCleanup } from "@/store/slices/groupsSlice";
 import { GroupsForm } from "./GroupForm";
 
 export const GroupsTab = () => {
@@ -13,7 +13,7 @@ export const GroupsTab = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleDeleteGroup = (groupId: string) => {
-    dispatch(deleteGroup(groupId));
+    dispatch(deleteGroupWithCleanup(groupId));
   };
 
   const filteredGroups = groups.filter((group) =>

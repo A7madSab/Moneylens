@@ -91,11 +91,49 @@ export const rulesSlice = createSlice({
         rule.isActive = !rule.isActive;
       }
     },
+    deleteRulesByGroupId: (state, action: PayloadAction<string>) => {
+      // Remove all rules that are associated with the specified groupId
+      state.rules = state.rules.filter(
+        (rule) => rule.groupId !== action.payload
+      );
+    },
   },
   selectors: {
     getActiveRules: (state) => state.rules.filter((rule) => rule.isActive),
   },
 });
+
+// Async thunk to add rule and re-apply all rules
+export const addRuleWithReapply = createAsyncThunk(
+  `${SLICE_KEYS.RULES}/addRuleWithReapply`,
+  async (rulePayload: CreateRulePayload, { dispatch, getState }) => {
+    // Add the rule
+    dispatch(rulesSlice.actions.addRule(rulePayload));
+
+    // Get updated state and re-apply all active rules
+    const state = getState() as IAppStore;
+    const activeRules = getActiveRules(state);
+    dispatch(reapplyAllRules(activeRules));
+
+    return rulePayload;
+  }
+);
+
+// Async thunk to update rule and re-apply all rules
+export const updateRuleWithReapply = createAsyncThunk(
+  `${SLICE_KEYS.RULES}/updateRuleWithReapply`,
+  async (rule: IRule, { dispatch, getState }) => {
+    // Update the rule
+    dispatch(rulesSlice.actions.updateRule(rule));
+
+    // Get updated state and re-apply all active rules
+    const state = getState() as IAppStore;
+    const activeRules = getActiveRules(state);
+    dispatch(reapplyAllRules(activeRules));
+
+    return rule;
+  }
+);
 
 // Async thunk to toggle rule and re-apply all rules
 export const toggleRuleActiveWithReapply = createAsyncThunk(
@@ -113,8 +151,14 @@ export const toggleRuleActiveWithReapply = createAsyncThunk(
   }
 );
 
-export const { addRule, deleteRule, updateRule, setRules, toggleRuleActive } =
-  rulesSlice.actions;
+export const {
+  addRule,
+  deleteRule,
+  updateRule,
+  setRules,
+  toggleRuleActive,
+  deleteRulesByGroupId,
+} = rulesSlice.actions;
 
 export const { getActiveRules } = rulesSlice.selectors;
 

@@ -13,7 +13,7 @@ import {
 import { Add } from "@mui/icons-material";
 import { useForm } from "@tanstack/react-form";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { addRule } from "@/store/slices/rulesSlice";
+import { addRuleWithReapply } from "@/store/slices/rulesSlice";
 
 export const RulesForm = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -27,7 +27,7 @@ export const RulesForm = () => {
       groupId: "",
     },
     onSubmit: async ({ value }) => {
-      dispatch(addRule(value));
+      dispatch(addRuleWithReapply(value));
 
       form.reset();
       setShowCreateForm(false);
