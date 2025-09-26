@@ -3,7 +3,6 @@ import { ITransaction } from "@/store/slices/transactionsSlice";
 import {
   Checkbox,
   FormControl,
-  InputLabel,
   ListItemText,
   MenuItem,
   Select,

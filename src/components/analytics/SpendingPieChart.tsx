@@ -30,7 +30,7 @@ const SpendingPieChart: React.FC<IProps> = ({ data, formatCurrency }) => {
               outerRadius={120}
               dataKey="amount"
               label={({ groupName, amount }) =>
-                `${groupName}: ${formatCurrency(amount)}`
+                `${groupName}: ${formatCurrency(amount as number)}`
               }
               stroke="#fff"
               strokeWidth={2}

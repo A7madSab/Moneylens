@@ -11,7 +11,10 @@ export class StorageManager {
     this.storageType = options.storageType || "local";
   }
 
-  private get storage(): Storage {
+  private get storage(): Storage | null {
+    if (typeof window === "undefined") {
+      return null;
+    }
     return this.storageType === "local" ? localStorage : sessionStorage;
   }
 
@@ -21,7 +24,7 @@ export class StorageManager {
         version: this.version,
         data,
       });
-      this.storage.setItem(this.key, serializedData);
+      this.storage?.setItem(this.key, serializedData);
     } catch (error) {
       console.error("Error saving to storage:", error);
     }
@@ -29,12 +32,12 @@ export class StorageManager {
 
   load(): unknown {
     try {
-      const serializedData = this.storage.getItem(this.key);
+      const serializedData = this.storage?.getItem(this.key);
       if (!serializedData) return null;
 
       const { version, data } = JSON.parse(serializedData);
       if (version !== this.version) {
-        this.storage.removeItem(this.key);
+        this.storage?.removeItem(this.key);
         return null;
       }
 
@@ -46,6 +49,6 @@ export class StorageManager {
   }
 
   clear(): void {
-    this.storage.removeItem(this.key);
+    this.storage?.removeItem(this.key);
   }
 }

@@ -73,13 +73,7 @@ export const AnalyticsTab = () => {
       currency: "USD",
     }).format(amount);
 
-  const {
-    totalExpenses,
-    avgTransactionAmount,
-    largestExpense,
-    smallestExpense,
-    transactionCount,
-  } = React.useMemo(
+  const { totalExpenses, avgTransactionAmount } = React.useMemo(
     () => calculateTransactionMetrics(transactions),
     [transactions]
   );

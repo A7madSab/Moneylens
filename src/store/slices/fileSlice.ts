@@ -8,6 +8,7 @@ import {
   removeTransactionsByFileName,
 } from "./transactionsSlice";
 import { getActiveRules } from "./rulesSlice";
+import { IAppStore } from "..";
 
 export interface IFileUploadProgress {
   name: string;
@@ -95,7 +96,7 @@ export const processFiles = createAsyncThunk(
     dispatch(startedUplaodingFiles());
 
     // Get active rules from the store
-    const state = getState() as any;
+    const state = getState() as IAppStore;
     const activeRules = getActiveRules(state);
 
     const initialProgresses: IFileUploadProgress[] = files.map((file) => ({
