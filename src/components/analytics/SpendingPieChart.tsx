@@ -9,15 +9,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-interface SpendingPieChartProps {
+interface IProps {
   data: { groupName: string; amount: number; color: string }[];
   formatCurrency: (amount: number) => string;
 }
 
-const SpendingPieChart: React.FC<SpendingPieChartProps> = ({
-  data,
-  formatCurrency,
-}) => {
+const SpendingPieChart: React.FC<IProps> = ({ data, formatCurrency }) => {
   return (
     <Card variant="outlined" sx={{ width: "100%", p: 3, height: "100%" }}>
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>

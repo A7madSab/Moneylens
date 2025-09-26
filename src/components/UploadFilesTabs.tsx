@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Box,
-  Button,
   Card,
   CardContent,
   Typography,
@@ -13,7 +12,7 @@ import {
   ListItemSecondaryAction,
   Alert,
   LinearProgress,
-  Divider
+  Divider,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -22,12 +21,17 @@ import ErrorIcon from "@mui/icons-material/Error";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useDropzone } from "react-dropzone";
-import { processFiles, removeFileAndTransactions } from "@/store/slices/fileSlice";
+import {
+  processFiles,
+  removeFileAndTransactions,
+} from "@/store/slices/fileSlice";
 
 export const UploadFilesTabs = () => {
   const dispatch = useAppDispatch();
   const files = useAppSelector((state) => state.files);
-  const transactions = useAppSelector((state) => state.transactions.transactions);
+  const transactions = useAppSelector(
+    (state) => state.transactions.transactions
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (files) => dispatch(processFiles(files)),
@@ -43,17 +47,22 @@ export const UploadFilesTabs = () => {
   };
 
   const getFileStats = (fileName: string) => {
-    const fileTransactions = transactions.filter(t => t.fileName === fileName);
+    const fileTransactions = transactions.filter(
+      (t) => t.fileName === fileName
+    );
     return {
       count: fileTransactions.length,
-      totalAmount: fileTransactions.reduce((sum, t) => sum + Math.abs(t.amountNumeric || 0), 0)
+      totalAmount: fileTransactions.reduce(
+        (sum, t) => sum + Math.abs(t.amountNumeric || 0),
+        0
+      ),
     };
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -99,7 +108,7 @@ export const UploadFilesTabs = () => {
               "&:hover": {
                 borderColor: "primary.main",
                 backgroundColor: "action.hover",
-              }
+              },
             }}
           >
             <input {...getInputProps()} />
@@ -133,13 +142,14 @@ export const UploadFilesTabs = () => {
             </Typography>
             <Box component="ul" sx={{ m: 0, pl: 2, color: "text.secondary" }}>
               <Typography component="li" variant="body2">
-                Column 1: Transaction Date (e.g., "Wed Jul 02 2025")
+                Column 1: Transaction Date (e.g., &quot;Wed Jul 02 2025&quot;)
               </Typography>
               <Typography component="li" variant="body2">
                 Column 2: Description
               </Typography>
               <Typography component="li" variant="body2">
-                Column 3: Amount (e.g., "-40 EGP", "100 USD")
+                Column 3: Amount (e.g., &quot;-40 EGP&quot;, &quot;100
+                USD&quot;)
               </Typography>
             </Box>
           </Box>
@@ -174,7 +184,13 @@ export const UploadFilesTabs = () => {
 
                       <ListItemText
                         primary={
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
                             <Typography variant="body1" fontWeight={500}>
                               {file.name}
                             </Typography>
@@ -202,14 +218,13 @@ export const UploadFilesTabs = () => {
                               />
                             )}
                             {file.status === "completed" && stats.count > 0 && (
-                              <Typography variant="body2" color="text.secondary">
-                                {stats.count} transactions • Total: {formatCurrency(stats.totalAmount)}
-                              </Typography>
+                              <>
+                                {stats.count} transactions • Total:{" "}
+                                {formatCurrency(stats.totalAmount)}
+                              </>
                             )}
                             {file.status === "error" && (
-                              <Typography variant="body2" color="error">
-                                Failed to process file
-                              </Typography>
+                              <>Failed to process file</>
                             )}
                           </Box>
                         }

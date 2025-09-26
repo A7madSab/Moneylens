@@ -276,3 +276,71 @@ export const getTopCategories = (
 }> => {
   return spendingByGroup.slice(0, limit);
 };
+
+export const calculateTransactionMetrics = (transactions: ITransaction[]) => {
+  let totalIncome = 0;
+  let totalExpenses = 0;
+  const transactionCount = transactions.length;
+  let largestExpense = 0;
+  let smallestExpense = 0;
+
+  // Get currency from first transaction or default to EGP
+  const currency = transactions.length > 0 ? transactions[0].currency || "EGP" : "EGP";
+
+  // Group transactions by date for per-day calculations
+  const transactionsByDate = new Map<string, number>();
+
+  transactions.forEach((transaction) => {
+    const amount = transaction.amountNumeric || 0;
+
+    if (amount > 0) {
+      totalIncome += amount;
+    } else {
+      const absAmount = Math.abs(amount);
+      totalExpenses += absAmount;
+      if (absAmount > largestExpense) {
+        largestExpense = absAmount;
+      }
+    }
+
+    if (amount < smallestExpense) {
+      smallestExpense = amount;
+    }
+
+    // Count transactions per day
+    const date = transaction.date;
+    if (date) {
+      const currentCount = transactionsByDate.get(date) || 0;
+      transactionsByDate.set(date, currentCount + 1);
+    }
+  });
+
+  const netSavings = totalIncome - totalExpenses;
+  const savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
+  const avgTransactionAmount =
+    transactionCount > 0 ? (totalIncome + totalExpenses) / transactionCount : 0;
+
+  // Calculate transactions per day statistics
+  const transactionsPerDayArray = Array.from(transactionsByDate.values());
+  const avgTransactionsPerDay = transactionsPerDayArray.length > 0
+    ? transactionsPerDayArray.reduce((sum, count) => sum + count, 0) / transactionsPerDayArray.length
+    : 0;
+
+  const uniqueDays = transactionsByDate.size;
+
+  return {
+    totalIncome: `${totalIncome.toFixed(2)} ${currency}`,
+    totalExpenses: `${totalExpenses.toFixed(2)} ${currency}`,
+    netSavings: `${netSavings.toFixed(2)} ${currency}`,
+    savingsRate: `${savingsRate.toFixed(1)}%`,
+    transactionCount: transactionCount,
+    largestExpense: `${largestExpense.toFixed(2)} ${currency}`,
+    smallestExpense: `${smallestExpense.toFixed(2)} ${currency}`,
+    avgTransactionAmount: `${avgTransactionAmount.toFixed(2)} ${currency}`,
+    transactionsPerDay: {
+      average: avgTransactionsPerDay.toFixed(1),
+      uniqueDays,
+      byDate: transactionsByDate,
+    },
+  };
+};

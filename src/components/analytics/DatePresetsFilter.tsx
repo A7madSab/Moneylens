@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  Box,
-} from "@mui/material";
+import { FormControl, InputLabel, Select, MenuItem, Chip } from "@mui/material";
 
 interface DatePreset {
   label: string;
@@ -15,42 +8,50 @@ interface DatePreset {
   endDate: string;
 }
 
-interface DatePresetsFilterProps {
+interface IProps {
   selectedPreset: string;
   onPresetChange: (preset: DatePreset | null) => void;
 }
 
-const DatePresetsFilter: React.FC<DatePresetsFilterProps> = ({
+const DatePresetsFilter: React.FC<IProps> = ({
   selectedPreset,
   onPresetChange,
 }) => {
   const getDatePresets = (): DatePreset[] => {
     const today = new Date();
-    const formatDate = (date: Date) => date.toISOString().split('T')[0];
+    const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
     return [
       {
         label: "Last 7 days",
         value: "last7days",
-        startDate: formatDate(new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)),
+        startDate: formatDate(
+          new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+        ),
         endDate: formatDate(today),
       },
       {
         label: "Last 30 days",
         value: "last30days",
-        startDate: formatDate(new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)),
+        startDate: formatDate(
+          new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+        ),
         endDate: formatDate(today),
       },
       {
         label: "This Month",
         value: "thisMonth",
-        startDate: formatDate(new Date(today.getFullYear(), today.getMonth(), 1)),
+        startDate: formatDate(
+          new Date(today.getFullYear(), today.getMonth(), 1)
+        ),
         endDate: formatDate(today),
       },
       {
         label: "Last Month",
         value: "lastMonth",
-        startDate: formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 1)),
+        startDate: formatDate(
+          new Date(today.getFullYear(), today.getMonth() - 1, 1)
+        ),
         endDate: formatDate(new Date(today.getFullYear(), today.getMonth(), 0)),
       },
       {
@@ -76,7 +77,7 @@ const DatePresetsFilter: React.FC<DatePresetsFilterProps> = ({
       return;
     }
 
-    const preset = datePresets.find(p => p.value === value);
+    const preset = datePresets.find((p) => p.value === value);
     if (preset) {
       onPresetChange(preset);
     }
@@ -91,10 +92,12 @@ const DatePresetsFilter: React.FC<DatePresetsFilterProps> = ({
         label="Quick Date Range"
         renderValue={(selected) => {
           if (!selected) return "";
-          const preset = datePresets.find(p => p.value === selected);
+          const preset = datePresets.find((p) => p.value === selected);
           return preset ? (
             <Chip label={preset.label} size="small" color="primary" />
-          ) : "";
+          ) : (
+            ""
+          );
         }}
       >
         <MenuItem value="">

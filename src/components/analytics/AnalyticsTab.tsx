@@ -1,70 +1,31 @@
 import React, { useState, useMemo } from "react";
 import {
   Box,
-  Typography,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Chip,
   TextField,
-  Paper,
   Stack,
   Card,
+  Grid,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 
 import { useAppSelector } from "@/store";
 import {
-  calculateTotalSpending,
   calculateSpendingByGroup,
   getTopCategories,
+  calculateTransactionMetrics,
 } from "@/utils";
+import { SummaryCards } from "./SummaryCards";
 
-import TotalSpendingCard from "./TotalSpendingCard";
 import SpendingPieChart from "./SpendingPieChart";
 import TopCategoriesBarChart from "./TopCategoriesBarChart";
-import MonthlyTrendChart from "./MonthlyTrendChart";
 import DatePresetsFilter from "./DatePresetsFilter";
-import EnhancedSummaryCards from "./EnhancedSummaryCards";
 import TransactionFrequencyChart from "./TransactionFrequencyChart";
 import TopMerchantsCard from "./TopMerchantsCard";
-
-const GridContainer = styled(Box)(({ theme }) => ({
-  display: "grid",
-  gridTemplateColumns: "repeat(12, 1fr)",
-  gap: theme.spacing(3),
-  marginTop: theme.spacing(2),
-}));
-
-const SummaryCardsContainer = styled(Box)(({ theme }) => ({
-  gridColumn: "1 / -1",
-  marginBottom: theme.spacing(2),
-}));
-
-const MainChartsContainer = styled(Box)(({ theme }) => ({
-  display: "grid",
-  gridTemplateColumns: "2fr 1fr",
-  gap: theme.spacing(3),
-  gridColumn: "1 / -1",
-  [theme.breakpoints.down("lg")]: {
-    gridTemplateColumns: "1fr",
-  },
-}));
-
-const SecondaryChartsContainer = styled(Box)(({ theme }) => ({
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: theme.spacing(3),
-  gridColumn: "1 / -1",
-  [theme.breakpoints.down("md")]: {
-    gridTemplateColumns: "1fr",
-  },
-}));
-
-const FullWidthContainer = styled(Box)({
-  gridColumn: "1 / -1",
-});
 
 export const AnalyticsTab = () => {
   const { transactions } = useAppSelector((state) => state.transactions);
@@ -100,7 +61,6 @@ export const AnalyticsTab = () => {
   }, [transactions, selectedFiles, startDate, endDate]);
 
   // analytics data
-  const totalSpending = calculateTotalSpending(filteredTransactions);
   const spendingByGroup = calculateSpendingByGroup(
     filteredTransactions,
     groups
@@ -113,122 +73,143 @@ export const AnalyticsTab = () => {
       currency: "USD",
     }).format(amount);
 
+  const {
+    totalExpenses,
+    avgTransactionAmount,
+    largestExpense,
+    smallestExpense,
+    transactionCount,
+  } = React.useMemo(
+    () => calculateTransactionMetrics(transactions),
+    [transactions]
+  );
+
+  const cards = [
+    {
+      title: "Total Expenses",
+      value: totalExpenses,
+      subtitle: `Avg: ${avgTransactionAmount}`,
+      icon: <TrendingDownIcon />,
+      color: "#E74C3C",
+      bgColor: "rgba(231, 76, 60, 0.1)",
+    },
+    // {
+    //   title: "Largest Expense",
+    //   value: largestExpense,
+    //   subtitle: `${smallestExpense}% smallest expense`,
+    //   icon: <AccountBalanceWalletIcon />,
+    //   color: "#E74C3C",
+    //   bgColor: "rgba(0, 184, 148, 0.1)",
+    // },
+    // {
+    //   title: "Transaction Count",
+    //   value: transactionCount,
+    //   subtitle: `${transactionCount} total transactions`,
+    //   icon: <ReceiptIcon sx={{ fontSize: 24 }} />,
+    //   color: "#9B59B6",
+    //   bgColor: "rgba(155, 89, 182, 0.1)",
+    // },
+  ];
+
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
-        Analytics Dashboard
-      </Typography>
+    <Card sx={{ padding: 3 }}>
+      <Grid container gap={2}>
+        <Grid size={12}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={3}>
+            <DatePresetsFilter
+              selectedPreset={selectedPreset}
+              onPresetChange={(preset) => {
+                if (preset) {
+                  setSelectedPreset(preset.value);
+                  setStartDate(preset.startDate);
+                  setEndDate(preset.endDate);
+                } else {
+                  setSelectedPreset("");
+                  setStartDate("");
+                  setEndDate("");
+                }
+              }}
+            />
 
-      {/* Filters */}
-      <Paper variant="outlined" sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-          Filters
-        </Typography>
-        <Stack direction={{ xs: "column", md: "row" }} spacing={3}>
-          <DatePresetsFilter
-            selectedPreset={selectedPreset}
-            onPresetChange={(preset) => {
-              if (preset) {
-                setSelectedPreset(preset.value);
-                setStartDate(preset.startDate);
-                setEndDate(preset.endDate);
-              } else {
-                setSelectedPreset("");
-                setStartDate("");
-                setEndDate("");
-              }
-            }}
-          />
+            <FormControl fullWidth sx={{ minWidth: 200 }}>
+              <InputLabel>Files</InputLabel>
+              <Select
+                multiple
+                value={selectedFiles}
+                onChange={(e) => setSelectedFiles(e.target.value as string[])}
+                renderValue={(selected) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip key={value} label={value} size="small" />
+                    ))}
+                  </Box>
+                )}
+              >
+                {uniqueFiles.map((fileName) => (
+                  <MenuItem key={fileName} value={fileName}>
+                    {fileName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-          <FormControl fullWidth sx={{ minWidth: 200 }}>
-            <InputLabel>Files</InputLabel>
-            <Select
-              multiple
-              value={selectedFiles}
-              onChange={(e) => setSelectedFiles(e.target.value as string[])}
-              renderValue={(selected) => (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip key={value} label={value} size="small" />
-                  ))}
-                </Box>
-              )}
-            >
-              {uniqueFiles.map((fileName) => (
-                <MenuItem key={fileName} value={fileName}>
-                  {fileName}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+            <TextField
+              label="Start Date"
+              type="date"
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setSelectedPreset(""); // Clear preset when manual date is selected
+              }}
+              InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: 180 }}
+            />
 
-          <TextField
-            label="Start Date"
-            type="date"
-            value={startDate}
-            onChange={(e) => {
-              setStartDate(e.target.value);
-              setSelectedPreset(""); // Clear preset when manual date is selected
-            }}
-            InputLabelProps={{ shrink: true }}
-            sx={{ minWidth: 180 }}
-          />
+            <TextField
+              label="End Date"
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setSelectedPreset(""); // Clear preset when manual date is selected
+              }}
+              InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: 180 }}
+            />
+          </Stack>
+        </Grid>
 
-          <TextField
-            label="End Date"
-            type="date"
-            value={endDate}
-            onChange={(e) => {
-              setEndDate(e.target.value);
-              setSelectedPreset(""); // Clear preset when manual date is selected
-            }}
-            InputLabelProps={{ shrink: true }}
-            sx={{ minWidth: 180 }}
-          />
-        </Stack>
-      </Paper>
+        <Grid size={12}>
+          <SummaryCards cards={cards} />
+        </Grid>
 
-      <GridContainer>
-        {/* Enhanced Summary Cards */}
-        <SummaryCardsContainer>
-          <EnhancedSummaryCards
-            transactions={filteredTransactions}
-            formatCurrency={formatCurrency}
-          />
-        </SummaryCardsContainer>
-
-        {/* Main Charts - Monthly Trend and Pie Chart */}
-        <MainChartsContainer>
-          <MonthlyTrendChart
-            transactions={filteredTransactions}
-            formatCurrency={formatCurrency}
-          />
+        <Grid size={12}>
           <SpendingPieChart
             data={spendingByGroup}
             formatCurrency={formatCurrency}
           />
-        </MainChartsContainer>
+        </Grid>
 
-        {/* Secondary Charts - Frequency and Top Merchants */}
-        <SecondaryChartsContainer>
+        <Grid size={12}>
           <TransactionFrequencyChart
             transactions={filteredTransactions}
             formatCurrency={formatCurrency}
           />
+        </Grid>
+        <Grid size={12}>
           <TopMerchantsCard
             transactions={filteredTransactions}
             formatCurrency={formatCurrency}
           />
-        </SecondaryChartsContainer>
+        </Grid>
 
-        {/* Full Width Charts */}
-        <FullWidthContainer>
+        <Grid size={12}>
           <TopCategoriesBarChart
             data={topCategories}
             formatCurrency={formatCurrency}
           />
-        </FullWidthContainer>
-      </GridContainer>
-    </Box>
+        </Grid>
+      </Grid>
+    </Card>
   );
 };
